@@ -1,0 +1,634 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dropdown</title>
+    <style>
+      :root {
+        --green: #154734;
+        --gold: #ffb81c;
+        --ink: #12352a;
+        --muted: #5f7068;
+        --soft-green: #e7f1ed;
+        --soft-gold: #fff4d8;
+        --line: #cfddd7;
+        --danger: #b42318;
+        --danger-soft: #ffe5e2;
+        --success: #1f7a46;
+        --success-soft: #e2f5e8;
+        --shadow: 0 22px 60px rgba(21, 71, 52, 0.16);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        min-height: 100vh;
+        margin: 0;
+        font-family: "Proxima Nova", "Proxima Nova Alt", "Helvetica Neue", Arial, sans-serif;
+        color: var(--ink);
+        background:
+          radial-gradient(circle at top left, rgba(255, 184, 28, 0.28), transparent 30rem),
+          linear-gradient(135deg, #f7fbf8 0%, #eef7f3 100%);
+      }
+
+      button,
+      select {
+        font: inherit;
+      }
+
+      .activity-shell {
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        padding: clamp(1rem, 3vw, 2.5rem);
+      }
+
+      .activity-card {
+        width: min(100%, 68rem);
+        background: rgba(255, 255, 255, 0.94);
+        border: 2px solid rgba(21, 71, 52, 0.1);
+        border-radius: 8px;
+        box-shadow: var(--shadow);
+        padding: clamp(1rem, 3vw, 2rem);
+      }
+
+      .activity-header,
+      .action-row {
+        display: flex;
+        gap: 1rem;
+      }
+
+      .activity-header {
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 1.5rem;
+      }
+
+      .eyebrow {
+        margin: 0 0 0.35rem;
+        color: var(--green);
+        font-size: 0.78rem;
+        font-weight: 800;
+        letter-spacing: 0;
+        text-transform: uppercase;
+      }
+
+      h1,
+      h2,
+      p {
+        margin-top: 0;
+      }
+
+      h1 {
+        margin-bottom: 0;
+        font-size: clamp(2rem, 4vw, 3.3rem);
+        line-height: 1;
+        letter-spacing: 0;
+        color: var(--green);
+      }
+
+      .score-pill {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 5rem;
+        min-height: 3rem;
+        padding: 0.55rem 1rem;
+        border-radius: 999px;
+        background: var(--green);
+        color: white;
+        font-size: 1.2rem;
+        font-weight: 800;
+        white-space: nowrap;
+      }
+
+      .progress-area {
+        margin: -0.35rem 0 1.35rem;
+        padding: 0.85rem;
+        border: 2px solid var(--line);
+        border-radius: 8px;
+        background: #fbfffd;
+      }
+
+      .progress-copy {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-bottom: 0.55rem;
+        color: var(--green);
+        font-weight: 900;
+      }
+
+      .progress-copy p {
+        margin-bottom: 0;
+      }
+
+      .progress-track {
+        height: 1rem;
+        overflow: hidden;
+        border-radius: 999px;
+        background: var(--soft-green);
+        border: 1px solid rgba(21, 71, 52, 0.18);
+      }
+
+      .progress-fill {
+        display: block;
+        width: 0%;
+        height: 100%;
+        border-radius: inherit;
+        background: linear-gradient(90deg, var(--green), var(--gold));
+        transition: width 260ms ease;
+      }
+
+      .match-board {
+        display: grid;
+        gap: 0.85rem;
+      }
+
+      .board-title {
+        margin: 0 0 0.1rem;
+        color: var(--green);
+        font-size: 1.15rem;
+        letter-spacing: 0;
+      }
+
+      .sentence-card {
+        margin: 0;
+        min-height: 5.25rem;
+        padding: 1rem;
+        border: 2px solid rgba(21, 71, 52, 0.18);
+        border-radius: 8px;
+        background: var(--soft-green);
+        font-weight: 800;
+        line-height: 1.6;
+      }
+
+      .answer-select {
+        width: min(100%, 12.5rem);
+        min-height: 3.1rem;
+        margin: 0 0.35rem;
+        padding: 0.55rem 2.15rem 0.55rem 0.75rem;
+        vertical-align: middle;
+        border: 2px dashed rgba(21, 71, 52, 0.45);
+        border-radius: 8px;
+        background: #fbfffd;
+        color: var(--green);
+        cursor: pointer;
+        font-weight: 900;
+        transition: border-color 160ms ease, background 160ms ease;
+      }
+
+      .answer-select:hover,
+      .answer-select:focus-visible {
+        border-color: var(--gold);
+        background: var(--soft-gold);
+        outline: none;
+      }
+
+      .answer-select.correct {
+        border-style: solid;
+        border-color: var(--success);
+        background: var(--success-soft);
+      }
+
+      .answer-select.incorrect {
+        border-style: solid;
+        border-color: var(--danger);
+        background: var(--danger-soft);
+      }
+
+      .feedback-tabs {
+        display: grid;
+        gap: 0;
+        margin-top: 1rem;
+        border: 2px solid var(--line);
+        border-radius: 8px;
+        overflow: hidden;
+        background: white;
+      }
+
+      .tab {
+        min-height: 2.6rem;
+        justify-self: start;
+        display: inline-flex;
+        align-items: center;
+        margin: 0.4rem 0 0 0.4rem;
+        padding: 0.5rem 0.85rem;
+        border-radius: 6px;
+        background: var(--green);
+        color: white;
+        font-weight: 800;
+      }
+
+      .feedback-tabs.status-error .tab {
+        background: var(--danger);
+      }
+
+      .feedback-tabs.status-success .tab {
+        background: var(--success);
+      }
+
+      .tab-panel {
+        padding: 1rem;
+        font-weight: 700;
+      }
+
+      .tab-panel p {
+        margin-bottom: 0;
+      }
+
+      .action-row {
+        justify-content: flex-end;
+        flex-wrap: wrap;
+        margin-top: 1rem;
+      }
+
+      .primary-button,
+      .secondary-button {
+        min-height: 3rem;
+        border-radius: 8px;
+        padding: 0.75rem 1.1rem;
+        font-weight: 900;
+        cursor: pointer;
+        transition: transform 150ms ease, box-shadow 150ms ease;
+      }
+
+      .primary-button {
+        border: 2px solid var(--gold);
+        background: var(--gold);
+        color: var(--green);
+      }
+
+      .secondary-button {
+        border: 2px solid var(--green);
+        background: white;
+        color: var(--green);
+      }
+
+      .primary-button:hover,
+      .secondary-button:hover,
+      .primary-button:focus-visible,
+      .secondary-button:focus-visible {
+        transform: translateY(-1px);
+        box-shadow: 0 9px 20px rgba(21, 71, 52, 0.14);
+        outline: none;
+      }
+
+      .completion-modal {
+        position: fixed;
+        inset: 0;
+        z-index: 40;
+        display: grid;
+        place-items: center;
+        padding: 1rem;
+        background: rgba(21, 71, 52, 0.62);
+      }
+
+      .completion-modal[hidden] {
+        display: none;
+      }
+
+      .completion-card {
+        width: min(100%, 25rem);
+        padding: 1.4rem;
+        border-radius: 8px;
+        background: white;
+        box-shadow: var(--shadow);
+      }
+
+      .completion-card h2 {
+        margin-bottom: 0.6rem;
+        color: var(--green);
+        font-size: 1.8rem;
+        letter-spacing: 0;
+      }
+
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
+
+      @media (max-width: 520px) {
+        .activity-shell {
+          padding: 0.75rem;
+        }
+
+        .activity-card {
+          padding: 0.85rem;
+        }
+
+        .activity-header,
+        .progress-copy {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+
+        .action-row {
+          display: grid;
+          grid-template-columns: 1fr;
+        }
+
+        .answer-select,
+        .primary-button,
+        .secondary-button {
+          width: 100%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="activity-shell" aria-labelledby="activity-title">
+      <section class="activity-card">
+        <header class="activity-header">
+          <div>
+            <p class="eyebrow">Dropdown Match</p>
+            <h1 id="activity-title">Dropdown</h1>
+          </div>
+          <div class="score-pill" aria-live="polite">
+            <span id="score-count">0</span><span aria-hidden="true">/3</span>
+            <span class="sr-only">correct answers</span>
+          </div>
+        </header>
+
+        <section class="progress-area" aria-labelledby="progress-label">
+          <div class="progress-copy">
+            <p id="progress-label">Progress</p>
+            <p id="progress-text">0% complete</p>
+          </div>
+          <div class="progress-track" role="progressbar" aria-labelledby="progress-label" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+            <span class="progress-fill" id="progress-fill"></span>
+          </div>
+        </section>
+
+        <section class="match-board" aria-labelledby="sentences-title">
+          <h2 class="board-title" id="sentences-title">Sentences</h2>
+          <p class="sentence-card">
+            The
+            <select class="answer-select" data-answer="dolphin" aria-label="Blank answer for the animal known for being intelligent and living in the ocean">
+              <option value="">__________</option>
+              <option value="dolphin">dolphin</option>
+              <option value="eagle">eagle</option>
+              <option value="salmon">salmon</option>
+            </select>
+            is known for being intelligent and living in the ocean.
+          </p>
+
+          <p class="sentence-card">
+            The
+            <select class="answer-select" data-answer="eagle" aria-label="Blank answer for the animal with strong wings and excellent eyesight">
+              <option value="">__________</option>
+              <option value="dolphin">dolphin</option>
+              <option value="eagle">eagle</option>
+              <option value="salmon">salmon</option>
+            </select>
+            has strong wings and excellent eyesight.
+          </p>
+
+          <p class="sentence-card">
+            Many people watch the
+            <select class="answer-select" data-answer="salmon" aria-label="Blank answer for the animal people watch swim upstream during spawning season">
+              <option value="">__________</option>
+              <option value="dolphin">dolphin</option>
+              <option value="eagle">eagle</option>
+              <option value="salmon">salmon</option>
+            </select>
+            swim upstream during spawning season.
+          </p>
+        </section>
+
+        <section class="feedback-tabs" aria-live="polite">
+          <div class="tab" id="feedback-tab" aria-controls="feedback-panel">Status</div>
+          <div class="tab-panel" id="feedback-panel">
+            <p id="status-message">Check answers when the dropdowns are selected.</p>
+          </div>
+        </section>
+
+        <footer class="action-row">
+          <button class="secondary-button" type="button" id="reset-button">Reset</button>
+          <button class="primary-button" type="button" id="check-button">Check Answers</button>
+        </footer>
+      </section>
+
+      <div class="completion-modal" id="completion-modal" role="dialog" aria-modal="true" aria-labelledby="complete-title" hidden>
+        <div class="completion-card">
+          <p class="eyebrow">Complete</p>
+          <h2 id="complete-title">All answers are correct.</h2>
+          <p>Great work completing the sentences.</p>
+          <button class="primary-button" type="button" id="retry-button">Retry Activity</button>
+        </div>
+      </div>
+    </main>
+
+    <script>
+      const SCORMActivity = (() => {
+        let api = null;
+        let initialized = false;
+        let finished = false;
+
+        function findApi(win) {
+          let current = win;
+          let attempts = 0;
+
+          try {
+            while (current && !current.API && current.parent && current.parent !== current && attempts < 500) {
+              attempts += 1;
+              current = current.parent;
+            }
+
+            if (current?.API) return current.API;
+
+            if (win.opener && !win.opener.closed) {
+              return findApi(win.opener);
+            }
+          } catch {
+            return null;
+          }
+
+          return null;
+        }
+
+        function call(method, ...args) {
+          if (!api || typeof api[method] !== "function") return "false";
+          return api[method](...args);
+        }
+
+        function init() {
+          if (initialized) return true;
+
+          api = findApi(window);
+          if (!api) return false;
+
+          initialized = call("LMSInitialize", "") === "true";
+          if (initialized) {
+            call("LMSSetValue", "cmi.core.score.min", "0");
+            call("LMSSetValue", "cmi.core.score.max", "100");
+            setIncomplete(0);
+            commit();
+          }
+
+          return initialized;
+        }
+
+        function setValue(element, value) {
+          if (!initialized) init();
+          if (!initialized) return;
+          call("LMSSetValue", element, value);
+        }
+
+        function commit() {
+          if (!initialized) return;
+          call("LMSCommit", "");
+        }
+
+        function setIncomplete(score = 0) {
+          setValue("cmi.core.lesson_status", "incomplete");
+          setValue("cmi.core.score.raw", String(score));
+          commit();
+        }
+
+        function setComplete(score = 100) {
+          setValue("cmi.core.lesson_status", "completed");
+          setValue("cmi.core.score.raw", String(score));
+          commit();
+        }
+
+        function finish() {
+          if (!initialized || finished) return;
+          commit();
+          call("LMSFinish", "");
+          finished = true;
+        }
+
+        window.addEventListener("beforeunload", finish);
+
+        return {
+          init,
+          setIncomplete,
+          setComplete,
+          finish,
+        };
+      })();
+
+      const checkButton = document.querySelector("#check-button");
+      const resetButton = document.querySelector("#reset-button");
+      const retryButton = document.querySelector("#retry-button");
+      const scoreCount = document.querySelector("#score-count");
+      const progressFill = document.querySelector("#progress-fill");
+      const progressText = document.querySelector("#progress-text");
+      const progressTrack = document.querySelector(".progress-track");
+      const feedbackBox = document.querySelector(".feedback-tabs");
+      const feedbackTab = document.querySelector("#feedback-tab");
+      const statusMessage = document.querySelector("#status-message");
+      const completionModal = document.querySelector("#completion-modal");
+      const selects = [...document.querySelectorAll(".answer-select")];
+
+      SCORMActivity.init();
+
+      function updateFeedback(label, message, state = "neutral") {
+        feedbackTab.textContent = label;
+        statusMessage.textContent = message;
+        feedbackBox.classList.toggle("status-success", state === "success");
+        feedbackBox.classList.toggle("status-error", state === "error");
+      }
+
+      function resetSelect(select) {
+        select.classList.remove("correct", "incorrect");
+        select.disabled = false;
+        select.removeAttribute("aria-invalid");
+      }
+
+      function updateProgress(correctCount) {
+        const percent = Math.round((correctCount / selects.length) * 100);
+        progressFill.style.width = `${percent}%`;
+        progressText.textContent = `${percent}% complete`;
+        progressTrack.setAttribute("aria-valuenow", String(percent));
+      }
+
+      function checkAnswers() {
+        let correct = 0;
+        let incorrect = 0;
+
+        selects.forEach((select) => {
+          if (select.disabled) {
+            correct += 1;
+            return;
+          }
+
+          resetSelect(select);
+
+          if (select.value === select.dataset.answer) {
+            correct += 1;
+            select.classList.add("correct");
+            select.disabled = true;
+          } else {
+            incorrect += 1;
+            select.classList.add("incorrect");
+            select.setAttribute("aria-invalid", "true");
+          }
+        });
+
+        scoreCount.textContent = String(correct);
+        updateProgress(correct);
+        const score = Math.round((correct / selects.length) * 100);
+
+        if (correct === selects.length) {
+          updateFeedback("All correct", "All answers are correct and locked.", "success");
+          SCORMActivity.setComplete(100);
+          completionModal.hidden = false;
+          retryButton.focus();
+        } else if (correct > 0) {
+          const plural = incorrect === 1 ? "dropdown still needs" : "dropdowns still need";
+          updateFeedback("Something's wrong", `${incorrect} ${plural} a different word. Correct answers are locked.`, "error");
+          SCORMActivity.setIncomplete(score);
+        } else {
+          updateFeedback("Something's wrong", "Try again. The answers need different words.", "error");
+          SCORMActivity.setIncomplete(0);
+        }
+      }
+
+      function resetActivity() {
+        completionModal.hidden = true;
+
+        selects.forEach((select) => {
+          select.value = "";
+          resetSelect(select);
+        });
+
+        scoreCount.textContent = "0";
+        updateProgress(0);
+        updateFeedback("Status", "Check answers when the dropdowns are selected.");
+        SCORMActivity.setIncomplete(0);
+      }
+
+      selects.forEach((select) => {
+        select.addEventListener("change", () => {
+          if (select.disabled) return;
+          resetSelect(select);
+          updateFeedback("Status", "Ready to check.");
+        });
+      });
+
+      checkButton.addEventListener("click", checkAnswers);
+      resetButton.addEventListener("click", resetActivity);
+      retryButton.addEventListener("click", resetActivity);
+
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") {
+          completionModal.hidden = true;
+        }
+      });
+
+      updateProgress(0);
+    </script>
+  </body>
+</html>
