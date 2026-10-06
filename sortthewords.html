@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Drag and Drop Category Activity</title>
+  <style>
+    :root {
+      --green: #154734;
+      --gold: #FFB81C;
+      --correct: #154734;
+      --incorrect: #B42318;
+      --ink: #123126;
+      --paper: #FFFDF5;
+      --white: #FFFFFF;
+      --line: rgba(21, 71, 52, 0.22);
+      --shadow: 0 14px 34px rgba(18, 49, 38, 0.14);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        linear-gradient(120deg, rgba(255, 184, 28, 0.20), transparent 40%),
+        var(--paper);
+      color: var(--ink);
+      font-family: "Proxima Nova", "ProximaNova", "Avenir Next", Avenir, Helvetica, Arial, sans-serif;
+      font-size: 20px;
+      line-height: 1.45;
+    }
+
+    main {
+      width: min(1160px, 100%);
+      margin: 0 auto;
+      padding: 28px;
+    }
+
+    .activity-header {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 22px;
+      margin-bottom: 22px;
+    }
+
+    h1 {
+      margin: 0;
+      color: var(--green);
+      font-size: clamp(2.1rem, 4vw, 4.25rem);
+      font-weight: 700;
+      line-height: 1;
+      letter-spacing: 0;
+    }
+
+    .instructions {
+      max-width: 650px;
+      margin: 12px 0 0;
+      font-size: clamp(1.12rem, 2vw, 1.38rem);
+      color: rgba(18, 49, 38, 0.84);
+    }
+
+    .score-panel {
+      min-width: 172px;
+      padding: 14px 18px;
+      border: 2px solid var(--green);
+      background: var(--gold);
+      color: var(--green);
+      text-align: center;
+      font-weight: 700;
+      box-shadow: 8px 8px 0 var(--green);
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(280px, 0.8fr) minmax(0, 1.4fr);
+      gap: 22px;
+      align-items: start;
+    }
+
+    .word-bank,
+    .category-area {
+      border: 3px solid var(--green);
+      background: var(--white);
+      box-shadow: var(--shadow);
+    }
+
+    .section-title {
+      margin: 0;
+      padding: 14px 18px;
+      background: var(--green);
+      color: var(--white);
+      font-size: clamp(1.25rem, 2vw, 1.55rem);
+      font-weight: 700;
+      letter-spacing: 0;
+    }
+
+    .bank-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      min-height: 390px;
+      padding: 16px;
+      align-content: start;
+    }
+
+    .word-card {
+      min-height: 60px;
+      border: 3px solid var(--green);
+      border-radius: 8px;
+      background: var(--gold);
+      color: var(--green);
+      cursor: grab;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 12px;
+      font: inherit;
+      font-size: clamp(1.13rem, 2vw, 1.38rem);
+      font-weight: 700;
+      text-align: center;
+      touch-action: manipulation;
+      transition: transform 160ms ease, box-shadow 160ms ease, background-color 160ms ease, color 160ms ease;
+      user-select: none;
+    }
+
+    .word-card:hover,
+    .word-card:focus-visible {
+      background: var(--green);
+      color: var(--gold);
+      box-shadow: 0 8px 0 var(--gold);
+      outline: 4px solid rgba(255, 184, 28, 0.42);
+      outline-offset: 3px;
+      transform: translateY(-3px);
+    }
+
+    .word-card:active {
+      cursor: grabbing;
+      transform: scale(0.98);
+    }
+
+    .word-card.is-selected {
+      background: var(--green);
+      color: var(--gold);
+      box-shadow: 0 0 0 5px rgba(255, 184, 28, 0.44);
+    }
+
+    .word-card.is-dragging {
+      opacity: 0.48;
+    }
+
+    .word-card.correct {
+      background: var(--correct);
+      color: var(--white);
+      border-color: var(--correct);
+      cursor: default;
+      pointer-events: none;
+      box-shadow: none;
+      transform: none;
+    }
+
+    .word-card.incorrect {
+      background: var(--incorrect);
+      color: var(--white);
+      border-color: var(--incorrect);
+      box-shadow: none;
+    }
+
+    .word-card.correct:hover,
+    .word-card.correct:focus-visible {
+      background: var(--correct);
+      color: var(--white);
+      outline: none;
+      outline-color: rgba(21, 71, 52, 0.22);
+      box-shadow: none;
+      transform: none;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
+
+    th {
+      height: 68px;
+      padding: 12px;
+      background: var(--gold);
+      border: 2px solid var(--green);
+      color: var(--green);
+      font-size: clamp(1.16rem, 2vw, 1.48rem);
+      font-weight: 700;
+      text-align: center;
+    }
+
+    td {
+      height: 390px;
+      vertical-align: top;
+      border: 2px solid var(--green);
+      background: rgba(255, 184, 28, 0.08);
+      padding: 12px;
+    }
+
+    .drop-zone {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      min-height: 100%;
+      border: 3px dashed transparent;
+      border-radius: 8px;
+      padding: 6px;
+      transition: background-color 160ms ease, border-color 160ms ease;
+    }
+
+    .drop-zone.is-over,
+    .drop-zone:focus-visible {
+      border-color: var(--gold);
+      background: rgba(255, 184, 28, 0.18);
+      outline: none;
+    }
+
+    .drop-hint {
+      margin: auto;
+      color: rgba(21, 71, 52, 0.62);
+      font-size: 1rem;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    .drop-zone:has(.word-card) .drop-hint,
+    .bank-grid:has(.word-card) + .empty-message {
+      display: none;
+    }
+
+    .actions {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-top: 22px;
+    }
+
+    .button {
+      min-height: 56px;
+      border: 3px solid var(--green);
+      border-radius: 8px;
+      background: var(--green);
+      color: var(--white);
+      cursor: pointer;
+      padding: 12px 22px;
+      font: inherit;
+      font-size: 1.18rem;
+      font-weight: 700;
+      transition: transform 160ms ease, box-shadow 160ms ease, background-color 160ms ease, color 160ms ease;
+    }
+
+    .button:hover,
+    .button:focus-visible {
+      background: var(--gold);
+      color: var(--green);
+      box-shadow: 0 7px 0 var(--green);
+      outline: 4px solid rgba(255, 184, 28, 0.42);
+      outline-offset: 3px;
+      transform: translateY(-2px);
+    }
+
+    .button:active {
+      transform: translateY(1px);
+      box-shadow: none;
+    }
+
+    .button.secondary {
+      display: none;
+      background: var(--gold);
+      color: var(--green);
+    }
+
+    .button.secondary.is-visible {
+      display: inline-flex;
+    }
+
+    .feedback {
+      min-height: 34px;
+      margin: 0;
+      color: var(--green);
+      font-size: clamp(1.1rem, 2vw, 1.35rem);
+      font-weight: 700;
+    }
+
+    .feedback.error {
+      color: var(--incorrect);
+    }
+
+    .feedback.success {
+      color: var(--green);
+    }
+
+    .completion {
+      display: none;
+      margin-top: 18px;
+      padding: 18px;
+      border: 3px solid var(--green);
+      border-radius: 8px;
+      background: var(--gold);
+      color: var(--green);
+      font-size: clamp(1.25rem, 2.3vw, 1.65rem);
+      font-weight: 700;
+      text-align: center;
+    }
+
+    .completion.is-visible {
+      display: block;
+    }
+
+    @media (max-width: 860px) {
+      main {
+        padding: 20px;
+      }
+
+      .activity-header {
+        display: block;
+      }
+
+      .score-panel {
+        width: fit-content;
+        margin-top: 18px;
+      }
+
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .bank-grid {
+        min-height: 0;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      td {
+        height: 260px;
+      }
+    }
+
+    @media (max-width: 620px) {
+      body {
+        font-size: 18px;
+      }
+
+      main {
+        padding: 16px;
+      }
+
+      .bank-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .category-area {
+        overflow-x: auto;
+      }
+
+      table {
+        min-width: 620px;
+      }
+
+      .button {
+        width: 100%;
+      }
+
+      .actions {
+        align-items: stretch;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header class="activity-header">
+      <div>
+        <h1>Sort the Words</h1>
+        <p class="instructions">Drag each word into the matching category. You can also tap a word, then tap a category to place it.</p>
+      </div>
+      <div class="score-panel" aria-live="polite">
+        <span id="scoreText">0 of 9 Correct</span>
+      </div>
+    </header>
+
+    <section class="layout" aria-label="Drag and drop sorting activity">
+      <div class="word-bank">
+        <h2 class="section-title">Words</h2>
+        <div id="wordBank" class="bank-grid" aria-label="Word bank"></div>
+      </div>
+
+      <div class="category-area">
+        <h2 class="section-title">Categories</h2>
+        <table aria-label="Category sorting table">
+          <thead>
+            <tr>
+              <th scope="col">Fruits</th>
+              <th scope="col">Animals</th>
+              <th scope="col">Colors</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>
+                <div class="drop-zone" data-category="fruits" tabindex="0" aria-label="Fruits drop area">
+                  <span class="drop-hint">Drop fruits here</span>
+                </div>
+              </td>
+              <td>
+                <div class="drop-zone" data-category="animals" tabindex="0" aria-label="Animals drop area">
+                  <span class="drop-hint">Drop animals here</span>
+                </div>
+              </td>
+              <td>
+                <div class="drop-zone" data-category="colors" tabindex="0" aria-label="Colors drop area">
+                  <span class="drop-hint">Drop colors here</span>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <div class="actions">
+      <button id="checkButton" class="button" type="button">Check Answers</button>
+      <button id="retryButton" class="button secondary" type="button">Retry</button>
+      <p id="feedback" class="feedback" role="status" aria-live="polite"></p>
+    </div>
+
+    <div id="completion" class="completion" role="status" aria-live="polite">
+      Completed! Great job sorting every word correctly.
+    </div>
+  </main>
+
+  <script>
+    const SCORM = (() => {
+      let api = null;
+      let version = null;
+      let initialized = false;
+
+      function findApi(win) {
+        let attempts = 0;
+        while (win && attempts < 500) {
+          if (win.API) {
+            version = "1.2";
+            return win.API;
+          }
+
+          if (win.API_1484_11) {
+            version = "2004";
+            return win.API_1484_11;
+          }
+
+          attempts += 1;
+          if (win.parent && win.parent !== win) {
+            win = win.parent;
+          } else {
+            break;
+          }
+        }
+
+        if (window.opener && !window.opener.closed) {
+          return findApi(window.opener);
+        }
+
+        return null;
+      }
+
+      function call(method, value, fallback = "") {
+        if (!api || typeof api[method] !== "function") {
+          return fallback;
+        }
+
+        try {
+          return typeof value === "undefined" ? api[method]("") : api[method](value);
+        } catch (error) {
+          return fallback;
+        }
+      }
+
+      function setValue(key, value) {
+        if (!api) {
+          return;
+        }
+
+        try {
+          if (version === "1.2") {
+            api.LMSSetValue(key, String(value));
+          } else {
+            api.SetValue(key, String(value));
+          }
+        } catch (error) {
+          return;
+        }
+      }
+
+      function commit() {
+        if (!api || !initialized) {
+          return;
+        }
+
+        if (version === "1.2") {
+          call("LMSCommit");
+        } else {
+          call("Commit");
+        }
+      }
+
+      function setScore(score) {
+        const normalizedScore = Math.max(0, Math.min(words.length, score));
+        if (version === "1.2") {
+          setValue("cmi.core.score.min", 0);
+          setValue("cmi.core.score.max", words.length);
+          setValue("cmi.core.score.raw", normalizedScore);
+        } else {
+          setValue("cmi.score.min", 0);
+          setValue("cmi.score.max", words.length);
+          setValue("cmi.score.raw", normalizedScore);
+          setValue("cmi.score.scaled", normalizedScore / words.length);
+        }
+        commit();
+      }
+
+      function setIncomplete() {
+        if (version === "1.2") {
+          setValue("cmi.core.lesson_status", "incomplete");
+        } else {
+          setValue("cmi.completion_status", "incomplete");
+          setValue("cmi.success_status", "unknown");
+        }
+        commit();
+      }
+
+      function complete() {
+        setScore(words.length);
+        if (version === "1.2") {
+          setValue("cmi.core.lesson_status", "completed");
+        } else {
+          setValue("cmi.completion_status", "completed");
+          setValue("cmi.success_status", "passed");
+        }
+        commit();
+      }
+
+      function initialize() {
+        api = findApi(window);
+        if (!api) {
+          return;
+        }
+
+        const result = version === "1.2" ? call("LMSInitialize") : call("Initialize");
+        initialized = result === true || result === "true" || result === "";
+        if (initialized) {
+          setScore(0);
+          setIncomplete();
+        }
+      }
+
+      function finish() {
+        if (!api || !initialized) {
+          return;
+        }
+
+        commit();
+        if (version === "1.2") {
+          call("LMSFinish");
+        } else {
+          call("Terminate");
+        }
+        initialized = false;
+      }
+
+      return { complete, finish, initialize, setIncomplete, setScore };
+    })();
+
+    const words = [
+      { id: "apple", label: "Apple", answers: ["fruits"] },
+      { id: "blue", label: "Blue", answers: ["colors"] },
+      { id: "dog", label: "Dog", answers: ["animals"] },
+      { id: "banana", label: "Banana", answers: ["fruits"] },
+      { id: "red", label: "Red", answers: ["colors"] },
+      { id: "cat", label: "Cat", answers: ["animals"] },
+      { id: "orange", label: "Orange", answers: ["fruits", "colors"] },
+      { id: "green", label: "Green", answers: ["colors"] },
+      { id: "lion", label: "Lion", answers: ["animals"] }
+    ];
+
+    const wordBank = document.querySelector("#wordBank");
+    const dropZones = document.querySelectorAll(".drop-zone");
+    const feedback = document.querySelector("#feedback");
+    const completion = document.querySelector("#completion");
+    const checkButton = document.querySelector("#checkButton");
+    const retryButton = document.querySelector("#retryButton");
+    const scoreText = document.querySelector("#scoreText");
+    let selectedCard = null;
+
+    function buildActivity() {
+      wordBank.innerHTML = "";
+      clearDropZones();
+      words.forEach((word) => wordBank.appendChild(createCard(word)));
+      selectedCard = null;
+      feedback.textContent = "";
+      feedback.className = "feedback";
+      completion.classList.remove("is-visible");
+      retryButton.classList.remove("is-visible");
+      checkButton.disabled = false;
+      updateScore();
+      SCORM.setIncomplete();
+    }
+
+    function clearDropZones() {
+      dropZones.forEach((zone) => {
+        zone.querySelectorAll(".word-card").forEach((card) => card.remove());
+      });
+    }
+
+    function createCard(word) {
+      const card = document.createElement("button");
+      card.type = "button";
+      card.className = "word-card";
+      card.id = `word-${word.id}`;
+      card.textContent = word.label;
+      card.draggable = true;
+      card.dataset.answers = word.answers.join(",");
+      card.setAttribute("aria-label", `${word.label}. Correct category: ${word.answers.join(" or ")}.`);
+
+      card.addEventListener("dragstart", handleDragStart);
+      card.addEventListener("dragend", handleDragEnd);
+      card.addEventListener("click", (event) => {
+        event.stopPropagation();
+        selectCard(card);
+      });
+      return card;
+    }
+
+    function handleDragStart(event) {
+      const card = event.currentTarget;
+      if (card.classList.contains("correct")) {
+        event.preventDefault();
+        return;
+      }
+
+      event.dataTransfer.setData("text/plain", card.id);
+      event.dataTransfer.effectAllowed = "move";
+      card.classList.add("is-dragging");
+      selectCard(card, false);
+    }
+
+    function handleDragEnd(event) {
+      event.currentTarget.classList.remove("is-dragging");
+      dropZones.forEach((zone) => zone.classList.remove("is-over"));
+    }
+
+    function selectCard(card, announce = true) {
+      if (card.classList.contains("correct")) {
+        return;
+      }
+
+      if (selectedCard === card) {
+        selectedCard.classList.remove("is-selected");
+        selectedCard = null;
+        return;
+      }
+
+      document.querySelectorAll(".word-card.is-selected").forEach((item) => item.classList.remove("is-selected"));
+      selectedCard = card;
+      selectedCard.classList.add("is-selected");
+      if (announce) {
+        feedback.textContent = `${card.textContent} selected. Tap a category to place it.`;
+        feedback.className = "feedback";
+      }
+    }
+
+    function moveCardToZone(card, zone) {
+      if (!card || card.classList.contains("correct")) {
+        return;
+      }
+
+      card.classList.remove("incorrect", "is-selected");
+      zone.appendChild(card);
+      selectedCard = null;
+      feedback.textContent = "";
+      feedback.className = "feedback";
+      updateScore();
+    }
+
+    dropZones.forEach((zone) => {
+      zone.addEventListener("dragover", (event) => {
+        event.preventDefault();
+        zone.classList.add("is-over");
+      });
+
+      zone.addEventListener("dragleave", () => {
+        zone.classList.remove("is-over");
+      });
+
+      zone.addEventListener("drop", (event) => {
+        event.preventDefault();
+        zone.classList.remove("is-over");
+        const card = document.querySelector(`#${event.dataTransfer.getData("text/plain")}`);
+        moveCardToZone(card, zone);
+      });
+
+      zone.addEventListener("click", (event) => {
+        if (selectedCard) {
+          if (event.target === selectedCard) {
+            return;
+          }
+
+          moveCardToZone(selectedCard, zone);
+          event.stopPropagation();
+        }
+      }, true);
+
+      zone.addEventListener("keydown", (event) => {
+        if ((event.key === "Enter" || event.key === " ") && selectedCard) {
+          event.preventDefault();
+          moveCardToZone(selectedCard, zone);
+        }
+      });
+    });
+
+    wordBank.addEventListener("dragover", (event) => {
+      event.preventDefault();
+    });
+
+    wordBank.addEventListener("drop", (event) => {
+      event.preventDefault();
+      const card = document.querySelector(`#${event.dataTransfer.getData("text/plain")}`);
+      if (card && !card.classList.contains("correct")) {
+        card.classList.remove("incorrect", "is-selected");
+        wordBank.appendChild(card);
+        selectedCard = null;
+        feedback.textContent = "";
+        feedback.className = "feedback";
+        updateScore();
+      }
+    });
+
+    checkButton.addEventListener("click", () => {
+      let correctCount = 0;
+      let incorrectCount = 0;
+      let unplacedCount = 0;
+
+      document.querySelectorAll(".word-card").forEach((card) => {
+        const zone = card.closest(".drop-zone");
+        const answers = card.dataset.answers.split(",");
+        card.classList.remove("incorrect");
+
+        if (!zone) {
+          unplacedCount += 1;
+          return;
+        }
+
+        if (answers.includes(zone.dataset.category)) {
+          card.classList.add("correct");
+          card.disabled = true;
+          card.draggable = false;
+          correctCount += 1;
+        } else {
+          card.classList.add("incorrect");
+          incorrectCount += 1;
+        }
+      });
+
+      updateScore();
+
+      if (correctCount === words.length) {
+        feedback.textContent = "All answers are correct.";
+        feedback.className = "feedback success";
+        completion.classList.add("is-visible");
+        retryButton.classList.add("is-visible");
+        checkButton.disabled = true;
+        SCORM.complete();
+        return;
+      }
+
+      completion.classList.remove("is-visible");
+      retryButton.classList.remove("is-visible");
+      feedback.className = "feedback error";
+      SCORM.setIncomplete();
+
+      if (incorrectCount && unplacedCount) {
+        feedback.textContent = "Some answers are incorrect and some words still need a category. Try again.";
+      } else if (incorrectCount) {
+        feedback.textContent = "Some answers are incorrect. Move the red words and check again.";
+      } else {
+        feedback.textContent = "Place every word into a category before checking again.";
+      }
+    });
+
+    retryButton.addEventListener("click", buildActivity);
+
+    function updateScore() {
+      const correctCards = document.querySelectorAll(".word-card.correct").length;
+      scoreText.textContent = `${correctCards} of ${words.length} Correct`;
+      SCORM.setScore(correctCards);
+    }
+
+    SCORM.initialize();
+    buildActivity();
+    window.addEventListener("beforeunload", SCORM.finish);
+  </script>
+</body>
+</html>
