@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Documentation Tool</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="app-shell">
+    <header class="activity-header">
+      <div>
+        <h1>Documentation Tool</h1>
+      </div>
+      <p class="instructions">Type your answers in the textbox provided and then export your document to save your answers.</p>
+    </header>
+
+    <section class="workspace" aria-label="Documentation form">
+      <nav class="step-panel" aria-label="Documentation progress">
+        <ol id="stepList" class="step-list"></ol>
+      </nav>
+
+      <section class="content-panel" aria-live="polite">
+        <div class="content-header">
+          <p id="sectionKicker" class="section-kicker"></p>
+          <h2 id="sectionTitle"></h2>
+        </div>
+
+        <form id="sectionForm" class="field-list"></form>
+
+        <section id="documentPage" class="document-page" hidden>
+          <p class="document-instructions">Click the Create Document button to document or export the text you have typed in.</p>
+          <button id="createDocument" class="primary-button create-document-button" type="button">Create Document</button>
+
+          <article id="previewPanel" class="preview-panel" hidden>
+            <div class="preview-heading">
+              <div>
+                <p class="section-kicker">Preview</p>
+                <h3>Documentation Summary</h3>
+              </div>
+              <div class="export-actions" aria-label="Export options">
+                <button id="downloadWord" class="secondary-button" type="button">Download Word</button>
+              </div>
+            </div>
+            <div id="documentPreview" class="document-preview"></div>
+          </article>
+        </section>
+
+        <div class="navigation-actions">
+          <button id="backButton" class="secondary-button" type="button">Back</button>
+          <button id="nextButton" class="primary-button" type="button">Next</button>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <script src="scorm.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
